@@ -202,7 +202,7 @@ if __name__ == '__main__':
                         help="regularization weight")
     parser.add_argument("--grad-norm", type=float, default=1.0,
                         help="norm to clip gradient to")
-    parser.add_argument("--graph-batch-size", type=int, default=30000,
+    parser.add_argument("--graph-batch-size", type=int, default=272115,
                         help="number of edges to sample in each iteration")
     parser.add_argument("--graph-split-size", type=float, default=0.5,
                         help="portion of edges used as positive sample")

@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import dgl
 from collections import defaultdict as ddict
+import pdb
 
 
 def preprocess(triplets_dict):
@@ -205,7 +206,6 @@ def generate_sampled_graph_and_labels(triplets,
 
     # negative sampling
     samples, labels = negative_sampling(relabeled_edges, len(uniq_v), negative_rate)
-
     # further split graph, only part of the edges will be used as graph
     # structure, while the rest half is used as unseen positive samples
 
