@@ -2,7 +2,9 @@ import torch
 from torch import optim, nn
 from torch.utils.data import Dataset, DataLoader
 from model import TranE
-from prepare_data import TrainSet, TestSet
+from prepare_data import AdaptiveTrainSet, TrainSet, TestSet
+from kmeans_pytorch import kmeans
+import pdb
 
 device = torch.device('cuda')
 embed_dim = 50
@@ -14,6 +16,18 @@ momentum = 0
 gamma = 1
 d_norm = 2
 top_k = 10
+num_clusters = 10
+
+def get_clusters(entity_embs):
+    ids, centers = kmeans(X=entity_embs, 
+                         num_clusters=num_clusters, 
+                         distance='euclidean', 
+                         device=device)
+    belongs2 = dict(zip(range(len(entity_embs)), ids.cpu().numpy().tolist()))
+    cluster_contains = {}
+    for k, v in belongs2.items():
+        cluster_contains[v] = cluster_contains.get(v, []) + [k]
+    return belongs2, cluster_contains
 
 
 def main():
@@ -21,7 +35,6 @@ def main():
     test_dataset = TestSet()
     test_dataset.convert_word_to_index(train_dataset.entity_to_index, train_dataset.relation_to_index,
                                        test_dataset.raw_data)
-    train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
     transe = TranE(train_dataset.entity_num, train_dataset.relation_num, device, dim=embed_dim, d_norm=d_norm,
                    gamma=gamma).to(device)
@@ -30,6 +43,12 @@ def main():
         # e <= e / ||e||
         entity_norm = torch.norm(transe.entity_embedding.weight.data, dim=1, keepdim=True)
         transe.entity_embedding.weight.data = transe.entity_embedding.weight.data / entity_norm
+        if epoch >= 20:
+            belongs2, cluster_contains = get_clusters(entity_embs=transe.entity_embedding.weight.data)
+            train_dataset = AdaptiveTrainSet(belongs2=belongs2, cluster_contains=cluster_contains)
+        else:
+            train_dataset = TrainSet()
+        train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
         total_loss = 0
         for batch_idx, (pos, neg) in enumerate(train_loader):
             pos, neg = pos.to(device), neg.to(device)
