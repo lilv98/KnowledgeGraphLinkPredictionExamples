@@ -4,26 +4,41 @@ from collections import Counter
 from torch.utils.data import Dataset, DataLoader
 import random
 import pdb
+from tqdm import tqdm
 
 
 class TrainSet(Dataset):
     def __init__(self):
         super(TrainSet, self).__init__()
-        # self.raw_data, self.entity_dic, self.relation_dic = self.load_texd()
+        self.neg_bias = 0.2
         self.raw_data, self.entity_to_index, self.relation_to_index = self.load_text()
         self.entity_num, self.relation_num = len(self.entity_to_index), len(self.relation_to_index)
         self.triple_num = self.raw_data.shape[0]
         print(f'Train set: {self.entity_num} entities, {self.relation_num} relations, {self.triple_num} triplets.')
         self.pos_data = self.convert_word_to_index(self.raw_data)
+        self.neg_pool = self.group_entities()
         self.related_dic = self.get_related_entity()
-        # print(self.related_dic[0], self.related_dic[479])
-        self.neg_data = self.generate_neg()
+        # self.neg_data = self.generate_neg()
+        self.neg_data = self.generate_neg_PNS()
 
     def __len__(self):
         return self.triple_num
 
     def __getitem__(self, item):
         return [self.pos_data[item], self.neg_data[item]]
+    
+    def group_entities(self):
+        data = pd.DataFrame(self.raw_data, columns=['h', 'r', 't'])
+        data['h'], data['t'] = data['h'].map(self.entity_to_index), data['t'].map(self.entity_to_index)
+        data['r'] = data['r'].map(self.relation_to_index)
+        head_pool = data.groupby('r')['h'].apply(set).to_dict()
+        tail_pool = data.groupby('r')['t'].apply(set).to_dict()
+        pool = {}
+        for r in head_pool.keys():
+            pool[r] = {}
+            pool[r]['h'] = list(head_pool[r])
+            pool[r]['t'] = list(tail_pool[r])
+        return pool
 
     def load_text(self):
         raw_data = pd.read_csv('../../data/FB15K/train.txt', sep='\t', header=None,
@@ -71,6 +86,87 @@ class TrainSet(Dataset):
                         break
 
         return np.array(neg_data)
+
+    def select_from_pool(self, head, rel, tail, pool, head_pool, tail_pool):
+        if pool == 'all-head':
+            while True:
+                neg = np.random.choice(list(range(self.entity_num)), 1)
+                if neg[0] not in self.related_dic[tail]:
+                    break
+            return neg[0]
+        elif pool == 'all-tail':
+            while True:
+                neg = np.random.choice(list(range(self.entity_num)), 1)
+                if neg[0] not in self.related_dic[head]:
+                    break
+            return neg[0]
+        elif pool == 'head':
+            try:
+                for i in range(6):
+                    neg = np.random.choice(head_pool, 1)
+                    if neg[0] not in self.related_dic[tail]:
+                        break
+                    if i == 5:
+                        raise ValueError
+                return neg[0]
+            except:
+                while True:
+                    neg = np.random.choice(list(range(self.entity_num)), 1)
+                    if neg[0] not in self.related_dic[tail]:
+                        break
+                return neg[0]
+        elif pool == 'tail':
+            try:
+                for i in range(6):
+                    neg = np.random.choice(tail_pool, 1)
+                    if neg[0] not in self.related_dic[head]:
+                        break
+                    if i == 5:
+                        raise ValueError
+                return neg[0]
+            except:
+                while True:
+                    neg = np.random.choice(list(range(self.entity_num)), 1)
+                    if neg[0] not in self.related_dic[head]:
+                        break
+                return neg[0]
+        else:
+            raise ValueError
+
+    
+    def generate_neg_PNS(self):
+        neg_samples = []
+        for triple in tqdm(self.pos_data):
+            head = triple[0]
+            rel = triple[1]
+            tail = triple[2]
+            head_pool = self.neg_pool[rel]['h']
+            tail_pool = self.neg_pool[rel]['h']
+            h_or_t = np.random.rand()
+            if h_or_t > 0.5:
+                # relpace head
+                p_or_r = np.random.rand()
+                if p_or_r <= self.neg_bias:
+                    # select from head pool
+                    neg_head = self.select_from_pool(head=head, rel=rel, tail=tail, pool='head', head_pool=head_pool, tail_pool=tail_pool)
+                    neg_samples.append([neg_head, rel, tail])
+                else:
+                    # select from all pool
+                    neg_head = self.select_from_pool(head=head, rel=rel, tail=tail, pool='all-head', head_pool=head_pool, tail_pool=tail_pool)
+                    neg_samples.append([neg_head, rel, tail])
+            else:
+                # relpace tail
+                p_or_r = np.random.rand()
+                if p_or_r <= self.neg_bias:
+                    # select from tail pool
+                    neg_tail = self.select_from_pool(head=head, rel=rel, tail=tail,  pool='tail', head_pool=head_pool, tail_pool=tail_pool)
+                    neg_samples.append([head, rel, neg_tail])
+                else:
+                    # select from all pool
+                    neg_tail = self.select_from_pool(head=head, rel=rel, tail=tail,  pool='all-tail', head_pool=head_pool, tail_pool=tail_pool)
+                    neg_samples.append([head, rel, neg_tail])
+        return np.array(neg_samples)
+            
 
     def get_related_entity(self):
         """
