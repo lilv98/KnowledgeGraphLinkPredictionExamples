@@ -1,0 +1,82 @@
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+Test set: 59071 triplets
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 1, loss = 0.8048351794979317
+===>epoch 1, test accuracy 0.21414907484213913
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 2, loss = 0.6258449508421865
+===>epoch 2, test accuracy 0.24109969358907077
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 3, loss = 0.4874126812384406
+===>epoch 3, test accuracy 0.26784716696856326
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 4, loss = 0.37541259175699127
+===>epoch 4, test accuracy 0.2872644783396252
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 5, loss = 0.29762122787514494
+===>epoch 5, test accuracy 0.30058742868751165
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 6, loss = 0.24686954145918164
+===>epoch 6, test accuracy 0.31374109122919874
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 7, loss = 0.21329344636542577
+===>epoch 7, test accuracy 0.32108818201824924
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 8, loss = 0.19039174944832138
+===>epoch 8, test accuracy 0.330094293308053
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 9, loss = 0.17351535615805508
+===>epoch 9, test accuracy 0.33673037531106637
+Train set: 14951 entities, 1345 relations, 483142 triplets.
+epoch 10, loss = 0.16044549884988143
+===>epoch 10, test accuracy 0.34147043388464726
+running k-means on cuda..
+[running kmeans]: 36it [00:01, 20.46it/s, center_shift=0.000047, iteration=36, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:43<00:00, 922.20it/s]
+epoch 11, loss = 0.22505771341190653
+===>epoch 11, test accuracy 0.3507304768837501
+running k-means on cuda..
+[running kmeans]: 92it [00:02, 35.11it/s, center_shift=0.000091, iteration=92, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:42<00:00, 925.20it/s]
+epoch 12, loss = 0.2143502716501538
+===>epoch 12, test accuracy 0.3557413959472499
+running k-means on cuda..
+[running kmeans]: 18it [00:01, 14.57it/s, center_shift=0.000086, iteration=18, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:41<00:00, 926.72it/s]
+epoch 13, loss = 0.2112725106232811
+===>epoch 13, test accuracy 0.3578744223053613
+running k-means on cuda..
+[running kmeans]: 12it [00:01, 10.66it/s, center_shift=0.000098, iteration=12, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:41<00:00, 926.38it/s]
+epoch 14, loss = 0.1990793477986515
+===>epoch 14, test accuracy 0.3587547188975978
+running k-means on cuda..
+[running kmeans]: 54it [00:01, 28.80it/s, center_shift=0.000080, iteration=54, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:40<00:00, 928.22it/s]
+epoch 15, loss = 0.2030261161193423
+===>epoch 15, test accuracy 0.36498451016573275
+running k-means on cuda..
+[running kmeans]: 24it [00:01, 18.05it/s, center_shift=0.000056, iteration=24, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:38<00:00, 931.72it/s]
+epoch 16, loss = 0.1914801678395605
+===>epoch 16, test accuracy 0.3664911716409067
+running k-means on cuda..
+[running kmeans]: 17it [00:01, 14.37it/s, center_shift=0.000020, iteration=17, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:35<00:00, 937.06it/s]
+epoch 17, loss = 0.18570308998652063
+===>epoch 17, test accuracy 0.36831947994785935
+running k-means on cuda..
+[running kmeans]: 41it [00:01, 23.91it/s, center_shift=0.000028, iteration=41, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:36<00:00, 935.22it/s]
+epoch 18, loss = 0.18569038938555385
+===>epoch 18, test accuracy 0.36850569653467863
+running k-means on cuda..
+[running kmeans]: 29it [00:01, 17.81it/s, center_shift=0.000063, iteration=29, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:35<00:00, 937.78it/s]
+epoch 19, loss = 0.179819461799047
+===>epoch 19, test accuracy 0.37058793655093025
+running k-means on cuda..
+[running kmeans]: 26it [00:01, 17.81it/s, center_shift=0.000084, iteration=26, tol=0.000100]
+100%|██████████████████████████████████████████████████████| 483142/483142 [08:31<00:00, 943.79it/s]
+epoch 20, loss = 0.17457482612128436
+===>epoch 20, test accuracy 0.3718406663168052
