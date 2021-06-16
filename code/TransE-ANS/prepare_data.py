@@ -19,14 +19,13 @@ class AdaptiveTrainSet(Dataset):
         # print(f'Train set: {self.entity_num} entities, {self.relation_num} relations, {self.triple_num} triplets.')
         self.pos_data = self.convert_word_to_index(self.raw_data)
         self.related_dic = self.get_related_entity()
-        # print(self.related_dic[0], self.related_dic[479])
-        self.neg_data = self.generate_neg_adaptive()
+        # self.neg_data = self.generate_neg_adaptive()
 
     def __len__(self):
         return self.triple_num
 
     def __getitem__(self, item):
-        return [self.pos_data[item], self.neg_data[item]]
+        return [self.pos_data[item], self.get_neg(self.pos_data[item])]
 
     def load_text(self):
         raw_data = pd.read_csv('../../data/FB15K/train.txt', sep='\t', header=None,
@@ -47,33 +46,6 @@ class AdaptiveTrainSet(Dataset):
             [self.entity_to_index[triple[0]], self.relation_to_index[triple[1]], self.entity_to_index[triple[2]]] for
             triple in data])
         return index_list
-
-    def generate_neg(self):
-        """
-        generate negative sampling
-        :return: same shape as positive sampling
-        """
-        neg_candidates, i = [], 0
-        neg_data = []
-        population = list(range(self.entity_num))
-        for idx, triple in enumerate(self.pos_data):
-            while True:
-                if i == len(neg_candidates):
-                    i = 0
-                    neg_candidates = random.choices(population=population, k=int(1e4))
-                neg, i = neg_candidates[i], i + 1
-                if random.randint(0, 1) == 0:
-                    # replace head
-                    if neg not in self.related_dic[triple[2]]:
-                        neg_data.append([neg, triple[1], triple[2]])
-                        break
-                else:
-                    # replace tail
-                    if neg not in self.related_dic[triple[0]]:
-                        neg_data.append([triple[0], triple[1], neg])
-                        break
-
-        return np.array(neg_data)
 
     def select_from_pool(self, head, rel, tail, pool, head_pool, tail_pool):
         if pool == 'all-head':
@@ -121,6 +93,35 @@ class AdaptiveTrainSet(Dataset):
         else:
             raise ValueError
 
+    def get_neg(self, triple):
+        head = triple[0]
+        rel = triple[1]
+        tail = triple[2]
+        head_pool = self.cluster_contains[self.belongs2[head]]
+        tail_pool = self.cluster_contains[self.belongs2[tail]]
+        h_or_t = np.random.rand()
+        if h_or_t > 0.5:
+            # relpace head
+            p_or_r = np.random.rand()
+            if p_or_r <= self.neg_bias:
+                # select from head pool
+                neg_head = self.select_from_pool(head=head, rel=rel, tail=tail, pool='head', head_pool=head_pool, tail_pool=tail_pool)
+                return np.array([neg_head, rel, tail])
+            else:
+                # select from all pool
+                neg_head = self.select_from_pool(head=head, rel=rel, tail=tail, pool='all-head', head_pool=head_pool, tail_pool=tail_pool)
+                return np.array([neg_head, rel, tail])
+        else:
+            # relpace tail
+            p_or_r = np.random.rand()
+            if p_or_r <= self.neg_bias:
+                # select from tail pool
+                neg_tail = self.select_from_pool(head=head, rel=rel, tail=tail,  pool='tail', head_pool=head_pool, tail_pool=tail_pool)
+                return np.array([head, rel, neg_tail])
+            else:
+                # select from all pool
+                neg_tail = self.select_from_pool(head=head, rel=rel, tail=tail,  pool='all-tail', head_pool=head_pool, tail_pool=tail_pool)
+                return np.array([head, rel, neg_tail])
 
     def generate_neg_adaptive(self):
         neg_samples = []
@@ -154,8 +155,6 @@ class AdaptiveTrainSet(Dataset):
                     neg_tail = self.select_from_pool(head=head, rel=rel, tail=tail,  pool='all-tail', head_pool=head_pool, tail_pool=tail_pool)
                     neg_samples.append([head, rel, neg_tail])
         return np.array(neg_samples)
-
-
 
     def get_related_entity(self):
         """

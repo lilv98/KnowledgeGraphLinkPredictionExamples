@@ -5,6 +5,7 @@ from model import TranE
 from prepare_data import AdaptiveTrainSet, TrainSet, TestSet
 from kmeans_pytorch import kmeans
 import pdb
+from tqdm import tqdm
 
 device = torch.device('cuda')
 embed_dim = 50
@@ -20,9 +21,9 @@ num_clusters = 10
 
 def get_clusters(entity_embs):
     ids, centers = kmeans(X=entity_embs, 
-                         num_clusters=num_clusters, 
-                         distance='euclidean', 
-                         device=device)
+                          num_clusters=num_clusters, 
+                          distance='euclidean', 
+                          device=device)
     belongs2 = dict(zip(range(len(entity_embs)), ids.cpu().numpy().tolist()))
     cluster_contains = {}
     for k, v in belongs2.items():
@@ -43,14 +44,14 @@ def main():
         # e <= e / ||e||
         entity_norm = torch.norm(transe.entity_embedding.weight.data, dim=1, keepdim=True)
         transe.entity_embedding.weight.data = transe.entity_embedding.weight.data / entity_norm
-        if epoch >= 20:
+        if epoch >= 0:
             belongs2, cluster_contains = get_clusters(entity_embs=transe.entity_embedding.weight.data)
             train_dataset = AdaptiveTrainSet(belongs2=belongs2, cluster_contains=cluster_contains)
         else:
             train_dataset = TrainSet()
-        train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
+        train_loader = DataLoader(train_dataset, num_workers=8, batch_size=train_batch_size, shuffle=True)
         total_loss = 0
-        for batch_idx, (pos, neg) in enumerate(train_loader):
+        for pos, neg in tqdm(train_loader):
             pos, neg = pos.to(device), neg.to(device)
             # pos: [batch_size, 3] => [3, batch_size]
             pos = torch.transpose(pos, 0, 1)
