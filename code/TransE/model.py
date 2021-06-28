@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 from prepare_data import TrainSet, TestSet
 import math
+import pdb
 
 
 class TranE(nn.Module):
@@ -29,8 +30,9 @@ class TranE(nn.Module):
             torch.empty(relation_num, self.dim).uniform_(-6 / math.sqrt(self.dim), 6 / math.sqrt(self.dim)),
             freeze=False)
         # l <= l / ||l||
-        relation_norm = torch.norm(self.relation_embedding.weight.data, dim=1, keepdim=True)
+        relation_norm = torch.norm(self.relation_embedding.weight.data, p=2, dim=1, keepdim=True)
         self.relation_embedding.weight.data = self.relation_embedding.weight.data / relation_norm
+        
 
     def forward(self, pos_head, pos_relation, pos_tail, neg_head, neg_relation, neg_tail):
         """
@@ -55,8 +57,7 @@ class TranE(nn.Module):
         :param neg_dis: [batch_size, embed_dim]
         :return: triples loss: [batch_size]
         """
-        distance_diff = self.gamma + torch.norm(pos_dis, p=self.d_norm, dim=1) - torch.norm(neg_dis, p=self.d_norm,
-                                                                                            dim=1)
+        distance_diff = self.gamma + torch.norm(pos_dis, p=self.d_norm, dim=1) - torch.norm(neg_dis, p=self.d_norm, dim=1)
         return torch.sum(F.relu(distance_diff))
 
     def tail_predict(self, head, relation, tail, k=10):
